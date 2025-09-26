@@ -1,0 +1,1032 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Roof Plan Drawing Assessment - Multi-Exercise</title>
+<style>
+  * {
+    box-sizing: border-box;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+  }
+  
+  body { 
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif; 
+    background-color: #f4f4f9;
+    color: #333;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    position: fixed;
+    width: 100%;
+    height: 100%;
+  }
+  
+  .container {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    width: 100vw;
+    padding: 10px;
+  }
+  
+  .header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+  }
+  
+  h2 {
+    color: #0056b3;
+    margin: 5px 0;
+    font-size: 1.2rem;
+  }
+  
+  .exercise-selector {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+  }
+  
+  select {
+    padding: 8px;
+    border-radius: 5px;
+    border: 1px solid #ccc;
+    font-size: 14px;
+  }
+  
+  #controls { 
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-bottom: 10px;
+  }
+  
+  .control-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+    justify-content: center;
+  }
+  
+  button { 
+    padding: 10px 12px;
+    font-size: 13px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+    -webkit-appearance: none;
+    appearance: none;
+    min-height: 40px;
+    flex: 1;
+    min-width: 0;
+    max-width: 120px;
+    user-select: none;
+    -webkit-user-select: none;
+  }
+  
+  button:active {
+    opacity: 0.7;
+  }
+  
+  button:disabled {
+    opacity: 0.4;
+  }
+  
+  button.active {
+    box-shadow: inset 0 2px 4px rgba(0,0,0,0.3);
+    background-color: #0056b3 !important;
+  }
+  
+  .angle-btn { 
+    background-color: #17a2b8; 
+    color: white; 
+  }
+  
+  .tool-btn { 
+    background-color: #28a745; 
+    color: white; 
+  }
+  
+  .edit-btn {
+    background-color: #6f42c1;
+    color: white;
+  }
+  
+  #checkButton {
+    background-color: #ff6b35;
+    color: white;
+  }
+  
+  #hintButton {
+    background-color: #ffc107;
+    color: black;
+  }
+  
+  #resetButton { 
+    background-color: #dc3545; 
+    color: white;
+  }
+  
+  .board-container {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 0;
+    position: relative;
+  }
+  
+  #board { 
+    border: 2px solid #ccc; 
+    background: #ffffff; 
+    box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    border-radius: 8px;
+    width: 100%;
+    height: 100%;
+    max-width: min(100%, 500px);
+    max-height: min(100%, 500px);
+    display: block;
+  }
+  
+  .status {
+    display: flex;
+    gap: 15px;
+    justify-content: center;
+    font-size: 11px;
+    font-weight: bold;
+    margin: 5px 0;
+  }
+  
+  .result-message {
+    padding: 10px;
+    margin: 10px 0;
+    border-radius: 5px;
+    text-align: center;
+    font-weight: bold;
+    display: none;
+  }
+  
+  .result-message.success {
+    background-color: #d4edda;
+    color: #155724;
+    border: 1px solid #c3e6cb;
+  }
+  
+  .result-message.warning {
+    background-color: #fff3cd;
+    color: #856404;
+    border: 1px solid #ffeeba;
+  }
+  
+  .result-message.error {
+    background-color: #f8d7da;
+    color: #721c24;
+    border: 1px solid #f5c6cb;
+  }
+  
+  .hint-line {
+    stroke: #ffa500;
+    stroke-width: 2;
+    stroke-dasharray: 5,5;
+    opacity: 0.6;
+    pointer-events: none;
+  }
+  
+  .help-text {
+    font-size: 11px;
+    color: #666;
+    text-align: center;
+    margin: 5px 0;
+  }
+  
+  .angle-display {
+    background: #f0f0f0;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+  }
+  
+  @media (min-width: 768px) {
+    .container { padding: 20px; }
+    button { padding: 12px 16px; font-size: 14px; }
+    h2 { font-size: 1.5rem; }
+  }
+</style>
+</head>
+<body>
+
+<div class="container">
+  <div class="header">
+    <h2>Roof Plan Assessment</h2>
+    <div class="exercise-selector">
+      <label>Exercise:</label>
+      <select id="exerciseSelect" onchange="loadExercise()">
+        <option value="0">1. L-Shape Roof</option>
+        <option value="1">2. Rectangle Roof</option>
+        <option value="2">3. T-Shape Roof</option>
+        <option value="3">4. Complex Roof</option>
+      </select>
+    </div>
+  </div>
+  
+  <div id="controls">
+    <div class="control-group">
+      <button class="angle-btn" data-angle="0">H 0°</button>
+      <button class="angle-btn" data-angle="90">V 90°</button>
+      <button class="angle-btn" data-angle="45">↗ 45°</button>
+      <button class="angle-btn" data-angle="135">↖ 135°</button>
+      <span class="angle-display">Angle: <span id="angleText">0°</span></span>
+    </div>
+    
+    <div class="control-group">
+      <button id="drawBtn" class="tool-btn">✏️ Draw</button>
+      <button id="eraseBtn" class="tool-btn">🧽 Erase</button>
+      <button id="pointsBtn" class="tool-btn">🎯 Points</button>
+    </div>
+    
+    <div class="control-group">
+      <button id="undoButton" class="edit-btn">↩️ Undo</button>
+      <button id="hintButton">💡 Hint</button>
+      <button id="checkButton">✓ Check</button>
+      <button id="resetButton">🗑️ Reset</button>
+    </div>
+  </div>
+  
+  <div id="resultMessage" class="result-message"></div>
+  
+  <p class="help-text">Draw hip lines from corners (45°/135°), then add ridge lines.</p>
+  
+  <div class="board-container">
+    <svg id="board" viewBox="0 0 600 600" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <clipPath id="roofClip">
+          <polygon id="clipPath" points="50,50 550,50 550,550 50,550"/>
+        </clipPath>
+      </defs>
+
+      <polygon id="roofOutline" 
+        points="50,50 550,50 550,550 50,550"
+        fill="white" stroke="black" stroke-width="2"/>
+
+      <g id="hintLines"></g>
+      <g id="lines" clip-path="url(#roofClip)"></g>
+      <g id="intersections"></g>
+
+      <!-- Corner indicators -->
+      <g id="cornerIndicators"></g>
+      
+      <!-- Snap indicators -->
+      <g id="snapIndicators">
+        <circle id="leftSnap" cx="0" cy="0" r="8" fill="#28a745" opacity="0" />
+        <circle id="rightSnap" cx="0" cy="0" r="8" fill="#28a745" opacity="0" />
+      </g>
+
+      <g id="ruler" transform="translate(200,200)">
+        <g id="rulerRotate" transform="rotate(0)">
+          <rect id="rulerBody" x="0" y="-15" width="200" height="30" 
+                fill="rgba(0,0,0,0.3)" stroke="black" stroke-width="1"/>
+          <line id="drawingEdge" x1="0" y1="-15" x2="200" y2="-15" 
+                stroke="red" stroke-width="1" opacity="0" style="pointer-events: none"/>
+          <g id="ticks" style="pointer-events: none"></g>
+        </g>
+      </g>
+    </svg>
+  </div>
+  
+  <div class="status">
+    <span>Lines: <span id="lineCount">0</span></span>
+    <span>Score: <span id="scoreText">0%</span></span>
+    <span>Exercise: <span id="exerciseName">L-Shape</span></span>
+  </div>
+</div>
+
+<script>
+// ===================================================================================
+// EXERCISE DEFINITIONS
+// To add a new exercise, copy an existing object and paste it at the end of the list.
+// Use your outline.png and solution.png as visual guides to get the coordinates.
+// The 'outline' and 'corners' are the points of the main building shape.
+// The 'solution' contains the correct lines the student needs to draw.
+// ===================================================================================
+const EXERCISES = [
+  { // This is Exercise 1
+    id: "l_shape",
+    name: "1. L-Shape Roof",
+    outline: [
+      [50, 50], [550, 50], [550, 300], 
+      [300, 300], [300, 550], [50, 550]
+    ],
+    corners: [
+      {x: 50, y: 50}, {x: 550, y: 50},
+      {x: 550, y: 300}, {x: 300, y: 300}, // This is the internal corner
+      {x: 300, y: 550}, {x: 50, y: 550}
+    ],
+    solution: {
+      tolerance: 20, // How close the student's line needs to be (in pixels)
+      lines: [
+        // These coordinates come from your "solution.png"
+        {type: "hip", from: [50, 50], to: [250, 250]},
+        {type: "hip", from: [550, 50], to: [350, 250]},
+        {type: "hip", from: [50, 550], to: [250, 350]},
+        {type: "hip", from: [300, 550], to: [250, 350]},
+        {type: "hip", from: [550, 300], to: [350, 250]},
+        {type: "valley", from: [300, 300], to: [250, 250]},
+        {type: "ridge", from: [250, 250], to: [250, 350]},
+        {type: "ridge", from: [250, 250], to: [350, 250]}
+      ]
+    }
+  },
+  { // This is Exercise 2
+    id: "rectangle",
+    name: "2. Rectangle Roof",
+    outline: [
+      [100, 150], [500, 150], [500, 450], [100, 450]
+    ],
+    corners: [
+      {x: 100, y: 150}, {x: 500, y: 150},
+      {x: 500, y: 450}, {x: 100, y: 450}
+    ],
+    solution: {
+      tolerance: 20,
+      lines: [
+        {type: "hip", from: [100, 150], to: [250, 300]},
+        {type: "hip", from: [500, 150], to: [350, 300]},
+        {type: "hip", from: [100, 450], to: [250, 300]},
+        {type: "hip", from: [500, 450], to: [350, 300]},
+        {type: "ridge", from: [250, 300], to: [350, 300]}
+      ]
+    }
+  },
+  { // This is Exercise 3
+    id: "t_shape",
+    name: "3. T-Shape Roof",
+    outline: [
+      [200, 50], [400, 50], [400, 200],
+      [550, 200], [550, 400], [400, 400],
+      [400, 550], [200, 550], [200, 400],
+      [50, 400], [50, 200], [200, 200]
+    ],
+    corners: [
+      {x: 200, y: 50}, {x: 400, y: 50}, {x: 400, y: 200}, {x: 550, y: 200},
+      {x: 550, y: 400}, {x: 400, y: 400}, {x: 400, y: 550}, {x: 200, y: 550},
+      {x: 200, y: 400}, {x: 50, y: 400}, {x: 50, y: 200}, {x: 200, y: 200}
+    ],
+    solution: {
+      tolerance: 20,
+      lines: [
+        {type: "ridge", from: [125, 300], to: [475, 300]},
+        {type: "ridge", from: [300, 125], to: [300, 475]},
+        {type: "hip", from: [200, 50], to: [300, 150]},
+        {type: "hip", from: [400, 50], to: [300, 150]},
+        {type: "hip", from: [550, 200], to: [450, 300]},
+        {type: "hip", from: [550, 400], to: [450, 300]},
+        {type: "hip", from: [400, 550], to: [300, 450]},
+        {type: "hip", from: [200, 550], to: [300, 450]},
+        {type: "hip", from: [50, 400], to: [150, 300]},
+        {type: "hip", from: [50, 200], to: [150, 300]},
+        {type: "valley", from: [400, 200], to: [300, 300]},
+        {type: "valley", from: [400, 400], to: [300, 300]},
+        {type: "valley", from: [200, 400], to: [300, 300]},
+        {type: "valley", from: [200, 200], to: [300, 300]}
+      ]
+    }
+  },
+    { // This is Exercise 4
+    id: "complex",
+    name: "4. Complex Roof",
+    outline: [
+      [50, 100], [300, 100], [300, 50], [450, 50],
+      [450, 200], [550, 200], [550, 400], [400, 400],
+      [400, 500], [200, 500], [200, 350], [50, 350]
+    ],
+    corners: [
+      {x: 50, y: 100}, {x: 300, y: 100}, {x: 300, y: 50},
+      {x: 450, y: 50}, {x: 450, y: 200}, {x: 550, y: 200},
+      {x: 550, y: 400}, {x: 400, y: 400}, {x: 400, y: 500},
+      {x: 200, y: 500}, {x: 200, y: 350}, {x: 50, y: 350}
+    ],
+    solution: {
+      tolerance: 25,
+      lines: [
+        {type: "ridge", from: [125, 225], to: [475, 225]},
+        {type: "ridge", from: [375, 125], to: [375, 225]},
+        {type: "ridge", from: [300, 300], to: [300, 425]},
+        {type: "hip", from: [50, 100], to: [125, 175]},
+        {type: "hip", from: [50, 350], to: [125, 275]},
+        {type: "hip", from: [300, 50], to: [375, 125]},
+        {type: "hip", from: [450, 50], to: [375, 125]},
+        {type: "hip", from: [550, 200], to: [475, 275]},
+        {type: "hip", from: [550, 400], to: [475, 325]},
+        {type: "hip", from: [400, 500], to: [300, 400]},
+        {type: "hip", from: [200, 500], to: [300, 400]}
+      ]
+    }
+  }
+  // To add Exercise 5, 6, etc., paste new exercise objects here
+];
+// ===================================================================================
+// END OF EXERCISE DEFINITIONS
+// ===================================================================================
+
+// Current exercise
+let currentExercise = 0;
+let hintShown = false;
+
+// Drawing state
+let angle = 0;
+let rulerPos = {x: 200, y: 200};
+let isDragging = false;
+let isDrawing = false;
+let currentTool = null;
+let currentLine = null;
+let dragStart = {x: 0, y: 0};
+let lineHistory = [];
+let intersectionPoints = [];
+let showPoints = true;
+
+const SNAP_DIST = 30;
+const DRAWING_EDGE_OFFSET = -15;
+
+// Get elements
+const board = document.getElementById('board');
+const ruler = document.getElementById('ruler');
+const rulerBody = document.getElementById('rulerBody');
+const rulerRotate = document.getElementById('rulerRotate');
+const drawingEdgeEl = document.getElementById('drawingEdge');
+const linesGroup = document.getElementById('lines');
+const hintLinesGroup = document.getElementById('hintLines');
+const intersectionsGroup = document.getElementById('intersections');
+const cornerIndicators = document.getElementById('cornerIndicators');
+const roofOutline = document.getElementById('roofOutline');
+const clipPath = document.getElementById('clipPath');
+const resultMessage = document.getElementById('resultMessage');
+
+// Initialize
+function init() {
+  initRuler();
+  loadExercise();
+  updateStatus();
+}
+
+// Initialize ruler
+function initRuler() {
+  const ticks = document.getElementById('ticks');
+  for (let i = 0; i <= 200; i += 10) {
+    const tick = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+    tick.setAttribute('x1', i);
+    tick.setAttribute('y1', -15);
+    tick.setAttribute('x2', i);
+    tick.setAttribute('y2', i % 50 === 0 ? -5 : -10);
+    tick.setAttribute('stroke', 'white');
+    tick.setAttribute('stroke-width', i % 50 === 0 ? 2 : 1);
+    tick.style.pointerEvents = 'none';
+    ticks.appendChild(tick);
+  }
+  
+  for (let i = 50; i <= 200; i += 50) {
+    const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+    text.setAttribute('x', i);
+    text.setAttribute('y', 5);
+    text.setAttribute('fill', 'white');
+    text.setAttribute('font-size', '10');
+    text.setAttribute('text-anchor', 'middle');
+    text.style.pointerEvents = 'none';
+    text.textContent = i / 10;
+    ticks.appendChild(text);
+  }
+}
+
+// Load exercise
+function loadExercise() {
+  const select = document.getElementById('exerciseSelect');
+  currentExercise = parseInt(select.value);
+  const exercise = EXERCISES[currentExercise];
+  
+  // Update dropdown to reflect name from data
+  const options = select.getElementsByTagName('option');
+  for(let i=0; i<options.length; i++) {
+    if(EXERCISES[i]) {
+        options[i].text = EXERCISES[i].name;
+    }
+  }
+
+  // Update outline
+  const pointsStr = exercise.outline.map(p => p.join(',')).join(' ');
+  roofOutline.setAttribute('points', pointsStr);
+  clipPath.setAttribute('points', pointsStr);
+  
+  // Update corner indicators
+  while (cornerIndicators.firstChild) {
+    cornerIndicators.removeChild(cornerIndicators.firstChild);
+  }
+  
+  exercise.corners.forEach(corner => {
+    const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+    circle.setAttribute('cx', corner.x);
+    circle.setAttribute('cy', corner.y);
+    circle.setAttribute('r', 5);
+    circle.setAttribute('fill', '#28a745');
+    circle.setAttribute('opacity', '0.3');
+    cornerIndicators.appendChild(circle);
+  });
+  
+  // Reset drawing
+  resetAll();
+  document.getElementById('exerciseName').textContent = exercise.name;
+}
+
+// Show hint
+function showHint() {
+  const exercise = EXERCISES[currentExercise];
+  
+  while (hintLinesGroup.firstChild) {
+    hintLinesGroup.removeChild(hintLinesGroup.firstChild);
+  }
+  
+  if (!hintShown) {
+    const hintLines = exercise.solution.lines.slice(0, 3);
+    
+    hintLines.forEach(line => {
+      const hintLine = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+      hintLine.setAttribute('x1', line.from[0]);
+      hintLine.setAttribute('y1', line.from[1]);
+      hintLine.setAttribute('x2', line.to[0]);
+      hintLine.setAttribute('y2', line.to[1]);
+      hintLine.classList.add('hint-line');
+      hintLinesGroup.appendChild(hintLine);
+    });
+    
+    hintShown = true;
+    document.getElementById('hintButton').textContent = '💡 Hide';
+  } else {
+    hintShown = false;
+    document.getElementById('hintButton').textContent = '💡 Hint';
+  }
+}
+
+// Check solution with precise validation
+function checkSolution() {
+  const exercise = EXERCISES[currentExercise];
+  const drawnLines = Array.from(linesGroup.querySelectorAll('line'));
+  const solution = exercise.solution;
+  
+  let correctLines = 0;
+  let totalRequired = solution.lines.length;
+  
+  const matchedSolutionLines = new Array(totalRequired).fill(false);
+
+  for (let drawnLine of drawnLines) {
+    const x1 = parseFloat(drawnLine.getAttribute('x1'));
+    const y1 = parseFloat(drawnLine.getAttribute('y1'));
+    const x2 = parseFloat(drawnLine.getAttribute('x2'));
+    const y2 = parseFloat(drawnLine.getAttribute('y2'));
+    
+    let lineMatched = false;
+    for(let i = 0; i < solution.lines.length; i++) {
+        if (matchedSolutionLines[i]) continue; // Already matched this solution line
+
+        const reqLine = solution.lines[i];
+        const matchForward = 
+            (Math.hypot(x1 - reqLine.from[0], y1 - reqLine.from[1]) < solution.tolerance &&
+             Math.hypot(x2 - reqLine.to[0], y2 - reqLine.to[1]) < solution.tolerance);
+      
+        const matchReverse = 
+            (Math.hypot(x2 - reqLine.from[0], y2 - reqLine.from[1]) < solution.tolerance &&
+             Math.hypot(x1 - reqLine.to[0], y1 - reqLine.to[1]) < solution.tolerance);
+
+        if (matchForward || matchReverse) {
+            correctLines++;
+            matchedSolutionLines[i] = true;
+            lineMatched = true;
+            break; 
+        }
+    }
+  }
+  
+  const score = totalRequired > 0 ? Math.round((correctLines / totalRequired) * 100) : 100;
+  document.getElementById('scoreText').textContent = score + '%';
+  
+  if (score === 100) {
+    resultMessage.textContent = '✓ Perfect! All lines are correct!';
+    resultMessage.className = 'result-message success';
+    sendToLMS(true, score, exercise.name);
+  } else if (score >= 80) {
+    resultMessage.textContent = `Good work! Score: ${score}%. Missing ${totalRequired - correctLines} line(s).`;
+    resultMessage.className = 'result-message warning';
+  } else {
+    resultMessage.textContent = `Keep trying! Score: ${score}%. ${totalRequired - correctLines} line(s) are missing or incorrect.`;
+    resultMessage.className = 'result-message error';
+  }
+  
+  resultMessage.style.display = 'block';
+  setTimeout(() => {
+    resultMessage.style.display = 'none';
+  }, 5000);
+}
+
+// Send results to LMS
+function sendToLMS(passed, score, exerciseName) {
+  const data = {
+    event: 'assessment_complete',
+    exercise: exerciseName,
+    passed: passed,
+    score: score,
+    timestamp: new Date().toISOString()
+  };
+  
+  if (window.parent !== window) {
+    window.parent.postMessage(data, '*');
+  }
+  
+  console.log('LMS Data:', data);
+  
+  if (window.API) {
+    try {
+      API.LMSSetValue('cmi.core.score.raw', score);
+      API.LMSSetValue('cmi.core.lesson_status', passed ? 'passed' : 'incomplete');
+      API.LMSCommit();
+    } catch (e) {
+      console.log('SCORM API not available');
+    }
+  }
+}
+
+// Utility functions
+function screenToSVG(x, y) {
+  const pt = board.createSVGPoint();
+  pt.x = x;
+  pt.y = y;
+  return pt.matrixTransform(board.getScreenCTM().inverse());
+}
+
+function getRulerEdge() {
+  const rad = angle * Math.PI / 180;
+  const cos = Math.cos(rad);
+  const sin = Math.sin(rad);
+  
+  return {
+    start: {
+      x: rulerPos.x + DRAWING_EDGE_OFFSET * (-sin),
+      y: rulerPos.y + DRAWING_EDGE_OFFSET * cos
+    },
+    end: {
+      x: rulerPos.x + 200 * cos + DRAWING_EDGE_OFFSET * (-sin),
+      y: rulerPos.y + 200 * sin + DRAWING_EDGE_OFFSET * cos
+    }
+  };
+}
+
+function findSnapPoint(point) {
+  const exercise = EXERCISES[currentExercise];
+  const allPoints = [...exercise.corners, ...intersectionPoints];
+  
+  for (const p of allPoints) {
+    const dist = Math.hypot(point.x - p.x, point.y - p.y);
+    if (dist < SNAP_DIST) {
+      return p;
+    }
+  }
+  return null;
+}
+
+function lineIntersection(l1, l2) {
+  const x1 = parseFloat(l1.getAttribute('x1'));
+  const y1 = parseFloat(l1.getAttribute('y1'));
+  const x2 = parseFloat(l1.getAttribute('x2'));
+  const y2 = parseFloat(l1.getAttribute('y2'));
+  
+  const x3 = parseFloat(l2.getAttribute('x1'));
+  const y3 = parseFloat(l2.getAttribute('y1'));
+  const x4 = parseFloat(l2.getAttribute('x2'));
+  const y4 = parseFloat(l2.getAttribute('y2'));
+  
+  const denom = (x1-x2)*(y3-y4) - (y1-y2)*(x3-x4);
+  if (Math.abs(denom) < 0.0001) return null;
+  
+  const t = ((x1-x3)*(y3-y4) - (y1-y3)*(x3-x4)) / denom;
+  const u = -((x1-x2)*(y1-y3) - (y1-y2)*(x1-x3)) / denom;
+  
+  if (t >= -0.01 && t <= 1.01 && u >= -0.01 && u <= 1.01) {
+    return {
+      x: x1 + t * (x2 - x1),
+      y: y1 + t * (y2 - y1)
+    };
+  }
+  return null;
+}
+
+function updateIntersections() {
+  while (intersectionsGroup.firstChild) {
+    intersectionsGroup.removeChild(intersectionsGroup.firstChild);
+  }
+  intersectionPoints = [];
+  
+  const lines = linesGroup.querySelectorAll('line');
+  
+  for (let i = 0; i < lines.length; i++) {
+    for (let j = i + 1; j < lines.length; j++) {
+      const int = lineIntersection(lines[i], lines[j]);
+      if (int) {
+        const exists = intersectionPoints.some(p => 
+          Math.hypot(p.x - int.x, p.y - int.y) < 5
+        );
+        
+        if (!exists) {
+          intersectionPoints.push(int);
+          
+          if (showPoints) {
+            const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+            circle.setAttribute('cx', int.x);
+            circle.setAttribute('cy', int.y);
+            circle.setAttribute('r', 6);
+            circle.setAttribute('fill', '#ff6b35');
+            circle.setAttribute('stroke', 'white');
+            circle.setAttribute('stroke-width', '1');
+            circle.setAttribute('opacity', '0.8');
+            intersectionsGroup.appendChild(circle);
+          }
+        }
+      }
+    }
+  }
+  
+  updateStatus();
+}
+
+function updateStatus() {
+  document.getElementById('lineCount').textContent = linesGroup.querySelectorAll('line').length;
+}
+
+function updateRuler() {
+  ruler.setAttribute('transform', `translate(${rulerPos.x},${rulerPos.y})`);
+  
+  const edge = getRulerEdge();
+  const snapStart = findSnapPoint(edge.start);
+  const snapEnd = findSnapPoint(edge.end);
+  
+  document.getElementById('leftSnap').setAttribute('cx', edge.start.x);
+  document.getElementById('leftSnap').setAttribute('cy', edge.start.y);
+  document.getElementById('leftSnap').setAttribute('opacity', snapStart ? '0.5' : '0');
+  
+  document.getElementById('rightSnap').setAttribute('cx', edge.end.x);
+  document.getElementById('rightSnap').setAttribute('cy', edge.end.y);
+  document.getElementById('rightSnap').setAttribute('opacity', snapEnd ? '0.5' : '0');
+}
+
+function setAngle(newAngle) {
+  angle = newAngle;
+  rulerRotate.setAttribute('transform', `rotate(${angle})`);
+  document.getElementById('angleText').textContent = `${angle}°`;
+  
+  currentTool = null;
+  document.getElementById('drawBtn').classList.remove('active');
+  document.getElementById('eraseBtn').classList.remove('active');
+  drawingEdgeEl.setAttribute('opacity', '0');
+  
+  updateRuler();
+}
+
+function undoLast() {
+  if (lineHistory.length > 0) {
+    const lastLine = lineHistory.pop();
+    if (lastLine.parentNode) {
+      linesGroup.removeChild(lastLine);
+    }
+    updateIntersections();
+  }
+}
+
+function resetAll() {
+  while (linesGroup.firstChild) {
+    linesGroup.removeChild(linesGroup.firstChild);
+  }
+  while (hintLinesGroup.firstChild) {
+    hintLinesGroup.removeChild(hintLinesGroup.firstChild);
+  }
+  
+  lineHistory = [];
+  hintShown = false;
+  document.getElementById('hintButton').textContent = '💡 Hint';
+  document.getElementById('scoreText').textContent = '0%';
+  resultMessage.style.display = 'none';
+  updateIntersections();
+}
+
+// Event handlers
+function handlePointerDown(e) {
+  e.preventDefault();
+  
+  const x = e.clientX || (e.touches && e.touches[0].clientX);
+  const y = e.clientY || (e.touches && e.touches[0].clientY);
+  const svgPt = screenToSVG(x, y);
+  
+  const target = e.target;
+  let isRulerClick = false;
+  
+  let checkTarget = target;
+  while (checkTarget && checkTarget !== board) {
+    if (checkTarget === ruler || checkTarget === rulerBody || checkTarget === rulerRotate) {
+      isRulerClick = true;
+      break;
+    }
+    checkTarget = checkTarget.parentNode || checkTarget.parentElement;
+  }
+  
+  if (isRulerClick && !isDrawing) {
+    isDragging = true;
+    dragStart = {
+      x: svgPt.x - rulerPos.x,
+      y: svgPt.y - rulerPos.y
+    };
+  } else if (currentTool === 'draw' && !isDragging) {
+    const edge = getRulerEdge();
+    const rad = angle * Math.PI / 180;
+    const dx = Math.cos(rad);
+    const dy = Math.sin(rad);
+    
+    const toClick = {x: svgPt.x - edge.start.x, y: svgPt.y - edge.start.y};
+    let proj = toClick.x * dx + toClick.y * dy;
+    proj = Math.max(0, Math.min(200, proj));
+    
+    let start = {
+      x: edge.start.x + proj * dx,
+      y: edge.start.y + proj * dy
+    };
+    
+    const snap = findSnapPoint(start);
+    if (snap) start = snap;
+    
+    currentLine = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+    currentLine.setAttribute('x1', start.x);
+    currentLine.setAttribute('y1', start.y);
+    currentLine.setAttribute('x2', start.x);
+    currentLine.setAttribute('y2', start.y);
+    
+    // *** IMPROVEMENT: Set all drawn lines to red ***
+    currentLine.setAttribute('stroke', '#d9534f'); // A nice red color
+    
+    currentLine.setAttribute('stroke-width', '3');
+    currentLine.setAttribute('stroke-linecap', 'round');
+    linesGroup.appendChild(currentLine);
+    
+    isDrawing = true;
+  } else if (currentTool === 'erase' && target.nodeName === 'line' && target.parentNode === linesGroup) {
+    const idx = lineHistory.indexOf(target);
+    if (idx > -1) lineHistory.splice(idx, 1);
+    linesGroup.removeChild(target);
+    updateIntersections();
+  }
+}
+
+function handlePointerMove(e) {
+  e.preventDefault();
+  
+  const x = e.clientX || (e.touches && e.touches[0].clientX);
+  const y = e.clientY || (e.touches && e.touches[0].clientY);
+  const svgPt = screenToSVG(x, y);
+  
+  if (isDragging) {
+    let newX = svgPt.x - dragStart.x;
+    let newY = svgPt.y - dragStart.y;
+    
+    const rad = angle * Math.PI / 180;
+    const cos = Math.cos(rad);
+    const sin = Math.sin(rad);
+    
+    const edgeStart = {
+      x: newX + DRAWING_EDGE_OFFSET * (-sin),
+      y: newY + DRAWING_EDGE_OFFSET * cos
+    };
+    
+    const edgeEnd = {
+      x: newX + 200 * cos + DRAWING_EDGE_OFFSET * (-sin),
+      y: newY + 200 * sin + DRAWING_EDGE_OFFSET * cos
+    };
+    
+    const snapStart = findSnapPoint(edgeStart);
+    const snapEnd = findSnapPoint(edgeEnd);
+    
+    if (snapStart) {
+      newX = snapStart.x - DRAWING_EDGE_OFFSET * (-sin);
+      newY = snapStart.y - DRAWING_EDGE_OFFSET * cos;
+      rulerBody.setAttribute('fill', 'rgba(40,167,69,0.5)');
+    } else if (snapEnd) {
+      newX = snapEnd.x - 200 * cos - DRAWING_EDGE_OFFSET * (-sin);
+      newY = snapEnd.y - 200 * sin - DRAWING_EDGE_OFFSET * cos;
+      rulerBody.setAttribute('fill', 'rgba(40,167,69,0.5)');
+    } else {
+      rulerBody.setAttribute('fill', 'rgba(0,0,0,0.3)');
+    }
+    
+    rulerPos = {x: newX, y: newY};
+    updateRuler();
+  } else if (isDrawing && currentLine) {
+    const x1 = parseFloat(currentLine.getAttribute('x1'));
+    const y1 = parseFloat(currentLine.getAttribute('y1'));
+    
+    let end;
+    if (angle === 0 || angle === 180) {
+      end = {x: svgPt.x, y: y1};
+    } else if (angle === 90 || angle === 270) {
+      end = {x: x1, y: svgPt.y};
+    } else {
+      const rad = angle * Math.PI / 180;
+      const dx = Math.cos(rad);
+      const dy = Math.sin(rad);
+      const toMouse = {x: svgPt.x - x1, y: svgPt.y - y1};
+      const proj = toMouse.x * dx + toMouse.y * dy;
+      end = {
+        x: x1 + proj * dx,
+        y: y1 + proj * dy
+      };
+    }
+    
+    const snap = findSnapPoint(end);
+    if (snap) end = snap;
+    
+    currentLine.setAttribute('x2', end.x);
+    currentLine.setAttribute('y2', end.y);
+  }
+}
+
+function handlePointerUp(e) {
+  e.preventDefault();
+  
+  isDragging = false;
+  rulerBody.setAttribute('fill', 'rgba(0,0,0,0.3)');
+  
+  if (isDrawing && currentLine) {
+    const x1 = parseFloat(currentLine.getAttribute('x1'));
+    const y1 = parseFloat(currentLine.getAttribute('y1'));
+    const x2 = parseFloat(currentLine.getAttribute('x2'));
+    const y2 = parseFloat(currentLine.getAttribute('y2'));
+    const len = Math.hypot(x2-x1, y2-y1);
+    
+    if (len > 5) {
+      lineHistory.push(currentLine);
+      updateIntersections();
+      
+      currentTool = null;
+      document.getElementById('drawBtn').classList.remove('active');
+      drawingEdgeEl.setAttribute('opacity', '0');
+    } else {
+      linesGroup.removeChild(currentLine);
+    }
+    
+    currentLine = null;
+    isDrawing = false;
+  }
+}
+
+// Button setup
+document.querySelectorAll('.angle-btn').forEach(btn => {
+  btn.addEventListener('click', () => setAngle(parseInt(btn.dataset.angle)));
+});
+
+document.getElementById('drawBtn').addEventListener('click', () => {
+  currentTool = currentTool === 'draw' ? null : 'draw';
+  document.getElementById('drawBtn').classList.toggle('active', currentTool === 'draw');
+  document.getElementById('eraseBtn').classList.remove('active');
+  drawingEdgeEl.setAttribute('opacity', currentTool === 'draw' ? '0.5' : '0');
+});
+
+document.getElementById('eraseBtn').addEventListener('click', () => {
+  currentTool = currentTool === 'erase' ? null : 'erase';
+  document.getElementById('eraseBtn').classList.toggle('active', currentTool === 'erase');
+  document.getElementById('drawBtn').classList.remove('active');
+  drawingEdgeEl.setAttribute('opacity', '0');
+});
+
+document.getElementById('pointsBtn').addEventListener('click', () => {
+  showPoints = !showPoints;
+  document.getElementById('pointsBtn').classList.toggle('active', showPoints);
+  updateIntersections();
+});
+
+document.getElementById('undoButton').addEventListener('click', undoLast);
+document.getElementById('hintButton').addEventListener('click', showHint);
+document.getElementById('checkButton').addEventListener('click', checkSolution);
+document.getElementById('resetButton').addEventListener('click', resetAll);
+
+// Event listeners
+board.addEventListener('pointerdown', handlePointerDown);
+board.addEventListener('pointermove', handlePointerMove);
+board.addEventListener('pointerup', handlePointerUp);
+board.addEventListener('pointercancel', handlePointerUp);
+
+board.addEventListener('touchstart', handlePointerDown, {passive: false});
+board.addEventListener('touchmove', handlePointerMove, {passive: false});
+board.addEventListener('touchend', handlePointerUp, {passive: false});
+
+document.body.addEventListener('touchmove', e => e.preventDefault(), {passive: false});
+
+// Initialize on load
+init();
+</script>
+
+</body>
+</html>
